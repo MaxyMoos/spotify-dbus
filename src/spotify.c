@@ -176,6 +176,12 @@ void process_variant(DBusMessageIter *variant, const char *key, MetadataArray *m
     }
 }
 
+void print_usage()
+{
+    printf("usage: spotify-dbus [command]\n\n  COMMANDS:\n");
+    printf("    track: display current track artist+title\n");
+}
+
 int main(int argc, char *argv[]) 
 {
     int retval = 0;
@@ -261,6 +267,8 @@ int main(int argc, char *argv[])
             free(artist);
             free(title);
         }
+    } else {
+        print_usage();
     }
 
     free_metadata_array(&metadata);
