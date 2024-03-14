@@ -49,11 +49,15 @@ void insert_metadata(MetadataArray *arr, const char *key, int dbus_type, const v
     MetadataItem *m = &arr->meta[arr->curIndex];
     m->key = strdup(key);
     m->dbus_type = dbus_type;
-    m->value = malloc(size);
-    if (m->value != NULL) {
-        memcpy(m->value, value, size);
+    if (dbus_type == DBUS_TYPE_STRING) {
+        m->value = strdup((char*)value);
     } else {
-        fprintf(stderr, "ERROR: could not allocate memory\n");
+        m->value = malloc(size);
+        if (m->value != NULL) {
+            memcpy(m->value, value, size);
+        } else {
+            fprintf(stderr, "ERROR: could not allocate memory\n");
+        }
     }
     arr->curIndex++;
 }
