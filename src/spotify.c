@@ -232,7 +232,9 @@ void print_usage()
 {
     printf("usage: spotify-dbus [command]\n\n  COMMANDS:\n");
     printf("    track       print current track artist+title\n");
+    printf("    p|play      play/pause\n");
     printf("    next        skip to next track in the tracklist\n");
+    printf("    prev        skip to beginning of track/previous track\n");
     printf("    metadata    print out all available metadata\n");
 }
 
@@ -324,6 +326,30 @@ int command_track(DBusConnection *conn, DBusError *error) // MetadataArray *meta
     return retval;
 }
 
+int command_play_pause(DBusConnection *conn, DBusError *error)
+{
+    DBusMessage *msg, *reply;
+
+    msg = dbus_message_new_method_call(
+        "org.mpris.MediaPlayer2.spotify",
+        "/org/mpris/MediaPlayer2",
+        "org.mpris.MediaPlayer2.Player",
+        "PlayPause"
+    );
+    if (msg == NULL) {
+        fprintf(stderr, "ERROR: DBusMessage was NULL\n");
+        exit(1);
+    }
+
+    reply = dbus_connection_send_with_reply_and_block(conn, msg, -1, error);
+    check_error(error);
+
+    dbus_message_unref(msg);
+    dbus_message_unref(reply);
+
+    return 0;
+}
+
 /**
  * Skips to next or previous track
  */
@@ -378,6 +404,8 @@ int main(int argc, char *argv[])
             retval = command_track(conn, &error);
         } else if (strcmp(argv[1], "metadata") == 0) {
             retval = command_metadata(conn, &error);
+        } else if (strcmp(argv[1], "p") == 0 || strcmp(argv[1], "play") == 0) {
+            retval = command_play_pause(conn, &error);
         } else if (strcmp(argv[1], "next") == 0) {
             retval = command_next_or_prev(NEXT, conn, &error);
         } else if (strcmp(argv[1], "prev") == 0) {
