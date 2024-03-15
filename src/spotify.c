@@ -9,6 +9,10 @@
 #define DEBUG 0
 #define MAXSIZE 100
 
+typedef enum {
+    NEXT,
+    PREV
+} NextOrPrev;
 
 typedef struct {
     char *key;
@@ -232,33 +236,6 @@ void print_usage()
     printf("    metadata    print out all available metadata\n");
 }
 
-/**
- * Skips to next track
- */
-int command_next(DBusConnection *conn, DBusError *error)
-{
-    DBusMessage *msg, *reply;
-
-    msg = dbus_message_new_method_call(
-        "org.mpris.MediaPlayer2.spotify",
-        "/org/mpris/MediaPlayer2",
-        "org.mpris.MediaPlayer2.Player",
-        "Next"
-    );
-    if (msg == NULL) {
-        fprintf(stderr, "ERROR: DBusMessage was NULL\n");
-        exit(1);
-    }
-
-    reply = dbus_connection_send_with_reply_and_block(conn, msg, -1, error);
-    check_error(error);
-
-    dbus_message_unref(msg);
-    dbus_message_unref(reply);
-
-    return 0;
-}
-
 // N.B.: `metadata` is expected to have already been initialized with init_metadata_array
 void get_dbus_metadata(DBusConnection *conn, MetadataArray *metadata, DBusError *error)
 {
@@ -347,6 +324,33 @@ int command_track(DBusConnection *conn, DBusError *error) // MetadataArray *meta
     return retval;
 }
 
+/**
+ * Skips to next or previous track
+ */
+int command_next_or_prev(NextOrPrev go_next, DBusConnection *conn, DBusError *error)
+{
+    DBusMessage *msg, *reply;
+
+    msg = dbus_message_new_method_call(
+        "org.mpris.MediaPlayer2.spotify",
+        "/org/mpris/MediaPlayer2",
+        "org.mpris.MediaPlayer2.Player",
+        go_next == NEXT ? "Next" : "Previous"
+    );
+    if (msg == NULL) {
+        fprintf(stderr, "ERROR: DBusMessage was NULL\n");
+        exit(1);
+    }
+
+    reply = dbus_connection_send_with_reply_and_block(conn, msg, -1, error);
+    check_error(error);
+
+    dbus_message_unref(msg);
+    dbus_message_unref(reply);
+
+    return 0;
+}
+
 int command_metadata(DBusConnection *conn, DBusError *error)
 {
     int retval = 0;
@@ -375,7 +379,9 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[1], "metadata") == 0) {
             retval = command_metadata(conn, &error);
         } else if (strcmp(argv[1], "next") == 0) {
-            retval = command_next(conn, &error);
+            retval = command_next_or_prev(NEXT, conn, &error);
+        } else if (strcmp(argv[1], "prev") == 0) {
+            retval = command_next_or_prev(PREV, conn, &error);
         } else {
             printf("Command not supported.\n");
             print_usage();
