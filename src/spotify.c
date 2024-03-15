@@ -227,7 +227,8 @@ void process_variant(DBusMessageIter *variant, const char *key, MetadataArray *m
 void print_usage()
 {
     printf("usage: spotify-dbus [command]\n\n  COMMANDS:\n");
-    printf("    track: display current track artist+title\n");
+    printf("    track       print current track artist+title\n");
+    printf("    metadata    print out all available metadata\n");
 }
 
 // N.B.: `metadata` is expected to have already been initialized with init_metadata_array
@@ -333,13 +334,10 @@ int command_metadata(DBusConnection *conn, DBusError *error)
 int main(int argc, char *argv[])
 {
     int retval = 0;
-
-    // MetadataArray metadata;
     DBusError error;
     DBusConnection *conn;
 
     dbus_error_init(&error);
-
     conn = dbus_bus_get(DBUS_BUS_SESSION, &error);
     check_error(&error);
 
@@ -348,6 +346,9 @@ int main(int argc, char *argv[])
             retval = command_track(conn, &error);
         } else if (strcmp(argv[1], "metadata") == 0) {
             retval = command_metadata(conn, &error);
+        } else {
+            printf("Command not supported.\n");
+            print_usage();
         }
     } else {
         print_usage();
@@ -355,8 +356,6 @@ int main(int argc, char *argv[])
 
     // Free the DBus connection
     dbus_connection_unref(conn);
-
-    //free_metadata_array(&metadata);
 
     return retval;
 }
