@@ -182,6 +182,28 @@ void print_usage()
     printf("    track: display current track artist+title\n");
 }
 
+int command_track(MetadataArray *metadata)
+{
+    int retval = 0;
+    char *artist = NULL;
+    char *title = NULL;
+
+    GetMetadataResult ret1 = get_value(metadata, "xesam:artist", DBUS_TYPE_STRING, &artist);
+    GetMetadataResult ret2 = get_value(metadata, "xesam:title", DBUS_TYPE_STRING, &title);
+
+    if (ret1 != VALUE_FOUND || ret2 != VALUE_FOUND) {
+        fprintf(stderr, "Could not read artist/track metadata.\n");
+        retval = 1;
+    } else {
+        printf("%s - %s", artist, title);
+        retval = 0;
+    }
+    free(artist);
+    free(title);
+
+    return retval;
+}
+
 int main(int argc, char *argv[]) 
 {
     int retval = 0;
@@ -252,20 +274,7 @@ int main(int argc, char *argv[])
 
     if (argc > 1) {
         if (strcmp(argv[1], "track") == 0) {
-            char *artist = NULL;
-            char *title = NULL;
-            GetMetadataResult ret1 = get_value(&metadata, "xesam:artist", DBUS_TYPE_STRING, &artist);
-            GetMetadataResult ret2 = get_value(&metadata, "xesam:title", DBUS_TYPE_STRING, &title);
-
-            if (ret1 != VALUE_FOUND || ret2 != VALUE_FOUND) {
-                fprintf(stderr, "Could not read artist/track metadata.\n");
-                retval = 1;
-            } else {
-                printf("%s - %s", artist, title);
-                retval = 0;
-            }
-            free(artist);
-            free(title);
+            retval = command_track(&metadata);
         }
     } else {
         print_usage();
