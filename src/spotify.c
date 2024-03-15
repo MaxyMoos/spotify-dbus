@@ -228,7 +228,35 @@ void print_usage()
 {
     printf("usage: spotify-dbus [command]\n\n  COMMANDS:\n");
     printf("    track       print current track artist+title\n");
+    printf("    next        skip to next track in the tracklist\n");
     printf("    metadata    print out all available metadata\n");
+}
+
+/**
+ * Skips to next track
+ */
+int command_next(DBusConnection *conn, DBusError *error)
+{
+    DBusMessage *msg, *reply;
+
+    msg = dbus_message_new_method_call(
+        "org.mpris.MediaPlayer2.spotify",
+        "/org/mpris/MediaPlayer2",
+        "org.mpris.MediaPlayer2.Player",
+        "Next"
+    );
+    if (msg == NULL) {
+        fprintf(stderr, "ERROR: DBusMessage was NULL\n");
+        exit(1);
+    }
+
+    reply = dbus_connection_send_with_reply_and_block(conn, msg, -1, error);
+    check_error(error);
+
+    dbus_message_unref(msg);
+    dbus_message_unref(reply);
+
+    return 0;
 }
 
 // N.B.: `metadata` is expected to have already been initialized with init_metadata_array
@@ -346,6 +374,8 @@ int main(int argc, char *argv[])
             retval = command_track(conn, &error);
         } else if (strcmp(argv[1], "metadata") == 0) {
             retval = command_metadata(conn, &error);
+        } else if (strcmp(argv[1], "next") == 0) {
+            retval = command_next(conn, &error);
         } else {
             printf("Command not supported.\n");
             print_usage();
