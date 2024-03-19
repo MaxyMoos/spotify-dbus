@@ -153,6 +153,9 @@ void print_metadata_array(MetadataArray arr)
             case DBUS_TYPE_UINT64:
                 printf("%" PRIu64 "\n", *((uint64_t*)tmp->value));
                 break;
+            case DBUS_TYPE_DOUBLE:
+                printf("%f\n", *((double*)tmp->value));
+                break;
             default:
                 printf("Unsupported type\n");
                 break;
